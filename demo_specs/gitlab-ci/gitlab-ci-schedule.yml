@@ -1,0 +1,12 @@
+scheduled:run-prompts:
+  stage: validate
+  image: python:3.11
+  script:
+    - pip install schedule requests pyyaml
+    - python run_scheduled_prompts.py --once
+  artifacts:
+    paths:
+      - prompt-results/*.md
+    expire_in: 30 days
+  only:
+    - schedules

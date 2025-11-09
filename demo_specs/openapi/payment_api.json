@@ -1,0 +1,27 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Payment API", "version": "1.0.0" },
+  "paths": {
+    "/api/payments": {
+      "post": {
+        "summary": "Legacy frontend endpoint (should be routed via user-service)",
+        "responses": { "405": { "description": "Method Not Allowed (expected in secure mesh)" } }
+      }
+    },
+    "/api/payments/process": {
+      "post": {
+        "summary": "Service-to-service payment processing",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object" } } }
+        },
+        "responses": { "200": { "description": "Processed" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceAccount": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    }
+  }
+}

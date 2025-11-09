@@ -1,0 +1,51 @@
+schedules:
+  # Run every hour
+  - name: "network-policy-violations"
+    cron: "0 * * * *"
+    prompt: |
+      Analyze Cilium network policy violations in the last hour.
+      Focus on production namespace.
+      Identify any unexpected DROP verdicts and explain if they're security issues or misconfigurations.
+      Provide actionable recommendations.
+    alert_threshold: "high_drop_rate"
+    notification:
+      - gitlab_issue
+      - slack_webhook
+  
+  # Run every 6 hours
+  - name: "cve-scan"
+    cron: "0 */6 * * *"
+    prompt: |
+      Check all running containers in production namespace for known CVEs.
+      List any HIGH or CRITICAL vulnerabilities.
+      Suggest patching or mitigation strategies.
+    alert_threshold: "critical_cve"
+    notification:
+      - gitlab_issue
+  
+  # Run daily at 9 AM
+  - name: "istio-authz-review"
+    cron: "0 9 * * *"
+    prompt: |
+      Review all Istio AuthorizationPolicy configurations in production.
+      Identify any overly permissive policies (e.g., principals: ["*"]).
+      Check for policies that haven't been used (no matching requests in last 7 days).
+      Suggest cleanup or tightening.
+    alert_threshold: "security_risk"
+    notification:
+      - gitlab_issue
+  
+  # Run before every deployment
+  - name: "pre-deploy-validation"
+    trigger: "gitlab_pipeline"
+    pipeline_stage: "pre-deploy"
+    prompt: |
+      Validate the proposed deployment changes:
+      1. Check if new NetworkPolicies conflict with existing ones
+      2. Verify Istio AuthZ policies allow necessary traffic
+      3. Ensure all required secrets exist
+      4. Review resource limits are appropriate
+      Approve deployment ONLY if all checks pass.
+    alert_threshold: "validation_failed"
+    notification:
+      - gitlab_mr_comment

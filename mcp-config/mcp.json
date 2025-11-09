@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_PAT}",
+        "GITLAB_API_URL": "https://gitlab.com/api/v4"
+      }
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-kubernetes"],
+      "env": {
+        "KUBECONFIG": "/root/.kube/config"
+      }
+    },
+    "prometheus": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-prometheus"],
+      "env": {
+        "PROMETHEUS_URL": "http://prometheus:9090"
+      }
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    }
+  }
+}

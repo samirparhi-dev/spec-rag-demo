@@ -1,0 +1,76 @@
+{
+  "status": "ProblemDetected",
+  "problems": 3,
+  "results": [
+    {
+      "kind": "Pod",
+      "name": "production/payment-service-5b8df-m9n3q",
+      "error": [
+        {
+          "text": "CrashLoopBackOff: Back-off restarting failed container",
+          "details": [
+            "Container 'payment-service' is in CrashLoopBackOff state",
+            "Exit code: 1",
+            "Last restart: 2025-11-08T18:15:22Z",
+            "Restart count: 12"
+          ]
+        }
+      ],
+      "parentObject": "Deployment/payment-service",
+      "ai_analysis": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "analysis": "The payment-service pod is crashing due to missing required environment variable JWT_SECRET_KEY. The application fails to initialize authentication configuration and exits with error code 1.\n\nRoot Cause:\n- The deployment manifest is missing the JWT_SECRET_KEY environment variable\n- The secret 'auth-secrets' may not exist or doesn't contain the required key\n\nRecommended Actions:\n1. Verify the secret exists: kubectl get secret auth-secrets -n production\n2. Check if JWT_SECRET_KEY is present in the secret\n3. If missing, create/update the secret with:\n   kubectl create secret generic auth-secrets \\\n     --from-literal=JWT_SECRET_KEY=<your-secret> \\\n     -n production\n4. Ensure deployment references the secret correctly in env section",
+        "sensitive_data_redacted": true
+      }
+    },
+    {
+      "kind": "CiliumNetworkPolicy",
+      "name": "production/payment-service-policy",
+      "error": [
+        {
+          "text": "High drop rate detected: 45 packets dropped in last 5 minutes",
+          "details": [
+            "Source: frontend-7d9f8c-xk2p4 (10.244.1.45)",
+            "Destination: payment-service-5b8df-m9n3q (10.244.2.78)",
+            "Drop reason: Policy denied (L3/L4)",
+            "Blocked endpoint: POST /api/payments"
+          ]
+        }
+      ],
+      "ai_analysis": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "analysis": "The Cilium network policy is blocking direct traffic from frontend to payment-service, which is the intended behavior based on the policy design. However, this is causing a high rate of dropped connections.\n\nArchitecture Intent:\n- Payment service should only accept requests from user-service (with mTLS)\n- Frontend should route payment requests through user-service\n- Direct frontend → payment-service communication is blocked for security\n\nThe 405 errors in Istio logs suggest the frontend is still attempting direct API calls.\n\nRecommended Actions:\n1. Update frontend code to route payment requests through user-service API\n2. Add Cilium policy annotation to log this as expected behavior\n3. Consider adding metrics alert for unexpected frontend → payment-service attempts\n4. Review API documentation to ensure developers understand the routing pattern",
+        "sensitive_data_redacted": true
+      }
+    },
+    {
+      "kind": "Service",
+      "name": "production/user-service",
+      "error": [
+        {
+          "text": "Readiness probe failing: 5 consecutive failures",
+          "details": [
+            "Probe type: HTTP",
+            "Endpoint: /health/ready",
+            "Status code: 503",
+            "Failure reason: Dependency check failed - payment-service unreachable"
+          ]
+        }
+      ],
+      "ai_analysis": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "analysis": "User-service readiness probe is failing because it cannot reach payment-service during health checks. This is a cascading failure from the payment-service CrashLoopBackOff.\n\nImpact:\n- User-service pods marked NotReady\n- Load balancer removing endpoints\n- Incoming traffic being rejected\n- Service degradation for end users\n\nRecommended Actions:\n1. Fix payment-service first (JWT_SECRET_KEY issue)\n2. Consider making user-service readiness probe more resilient:\n   - Use 'initialDelaySeconds: 30' to allow dependencies to start\n   - Add 'failureThreshold: 5' for tolerance\n   - Implement circuit breaker pattern for downstream dependencies\n3. Review dependency health check logic - should readiness fail if optional dependency is down?",
+        "sensitive_data_redacted": true
+      }
+    }
+  ],
+  "metadata": {
+    "timestamp": "2025-11-08T18:16:00Z",
+    "cluster": "production-aks-cluster",
+    "k8sgpt_version": "v0.3.25",
+    "analyzers_run": ["Pod", "Service", "Deployment", "ReplicaSet", "NetworkPolicy", "HPA"]
+  }
+}

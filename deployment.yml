@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  annotations:
+    description: "User service deployment with auth requirements"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: myregistry/user-service:v1.2.3
+        ports:
+        - containerPort: 8080
+        env:
+        - name: AUTH_REQUIRED
+          value: "true"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secrets
+              key: jwt-secret

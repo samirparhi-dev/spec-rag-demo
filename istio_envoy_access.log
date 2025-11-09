@@ -1,0 +1,7 @@
+[2025-11-08T18:15:32.456Z] "POST /api/payments HTTP/1.1" 405 RBAC 0 58 2 - "-" "Mozilla/5.0" "f47ac10b-58cc-4372-a567-0e02b2c3d479" "payment-service.production.svc.cluster.local:8080" "-" inbound|8080|| 10.244.2.78:8080 10.244.1.45:45678 - default
+
+[2025-11-08T18:15:33.789Z] "POST /api/payments/process HTTP/1.1" 200 - 0 1234 45 44 "-" "Go-http-client/1.1" "a2b3c4d5-e6f7-8g9h-0i1j-k2l3m4n5o6p7" "payment-service.production.svc.cluster.local:8080" "10.244.2.78:8080" inbound|8080|| 10.244.2.78:8080 10.244.3.22:52341 - default
+
+[2025-11-08T18:15:35.123Z] "GET /api/payments/history HTTP/1.1" 403 RBAC 0 87 1 - "-" "curl/7.68.0" "b3c4d5e6-f7g8-9h0i-1j2k-l3m4n5o6p7q8" "payment-service.production.svc.cluster.local:8080" "-" inbound|8080|| 10.244.2.78:8080 10.244.1.45:46789 - default
+
+[2025-11-08T18:15:36.456Z] "POST /api/payments/process HTTP/1.1" 500 - 0 0 0 0 "-" "Go-http-client/1.1" "c4d5e6f7-g8h9-0i1j-2k3l-m4n5o6p7q8r9" "payment-service.production.svc.cluster.local:8080" "

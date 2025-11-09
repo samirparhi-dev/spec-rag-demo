@@ -1,0 +1,26 @@
+openapi: "3.0.0"
+info:
+  title: Auth Service
+  version: "1.0.0"
+paths:
+  /auth/token:
+    post:
+      summary: Issue service JWT (used by services)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service:
+                  type: string
+      responses:
+        '200':
+          description: JWT token issued
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY

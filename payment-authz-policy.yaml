@@ -1,0 +1,50 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: payment-service-authz
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  
+  action: ALLOW
+  rules:
+    # Allow POST /api/payments/process from user-service only
+    - from:
+        - source:
+            principals: ["cluster.local/ns/production/sa/user-service"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/api/payments/process"]
+      when:
+        - key: request.auth.claims[role]
+          values: ["service-account"]
+    
+    # Allow GET /api/payments/* from authenticated users
+    - from:
+        - source:
+            requestPrincipals: ["*"]
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/api/payments/*"]
+      when:
+        - key: request.auth.claims[role]
+          values: ["user", "admin"]
+    
+    # Deny all other traffic (implicit)
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: payment-service-mtls
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  mtls:
+    mode: STRICT

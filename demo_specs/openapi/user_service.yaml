@@ -1,0 +1,43 @@
+openapi: "3.0.0"
+info:
+  title: User Service API
+  version: "1.0.0"
+paths:
+  /health/ready:
+    get:
+      summary: Readiness probe
+      responses:
+        '200':
+          description: OK
+  /user/{id}:
+    get:
+      summary: Get user by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+  /user/payments:
+    post:
+      summary: Proxy payment creation (frontend should call user-service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '202':
+          description: Accepted, processing via payment-service
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

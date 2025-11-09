@@ -1,0 +1,268 @@
+stages:
+  - validate
+  - build
+  - security-scan
+  - deploy
+  - post-deploy-validation
+  - auto-heal
+
+variables:
+  K8S_NAMESPACE: production
+  CILIUM_VERSION: "1.14"
+  ISTIO_VERSION: "1.20"
+  K8SGPT_ENABLED: "true"
+
+# Pre-deployment validation
+validate:specs:
+  stage: validate
+  image: stoplight/spectral:latest
+  script:
+    - spectral lint openapi/*.yaml --ruleset .spectral.yaml
+    - echo "✓ OpenAPI specs validated"
+  only:
+    - merge_requests
+    - main
+
+validate:cilium-policies:
+  stage: validate
+  image: cilium/cilium-cli:latest
+  script:
+    - |
+      for policy in cilium-policies/*.yaml; do
+        echo "Validating $policy"
+        cilium policy validate $policy || exit 1
+      done
+    - echo "✓ Cilium policies validated"
+  only:
+    - merge_requests
+    - main
+
+validate:istio-policies:
+  stage: validate
+  image: istio/istioctl:${ISTIO_VERSION}
+  script:
+    - istioctl analyze -f istio-policies/ --use-kube=false
+    - echo "✓ Istio policies validated"
+  only:
+    - merge_requests
+    - main
+
+# Build stage
+build:image:
+  stage: build
+  image: docker:24.0
+  services:
+    - docker:24.0-dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/payment-service:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE/payment-service:$CI_COMMIT_SHA
+  only:
+    - main
+
+# Security scanning
+security:trivy-scan:
+  stage: security-scan
+  image: aquasec/trivy:latest
+  script:
+    - trivy image --severity HIGH,CRITICAL --exit-code 1 $CI_REGISTRY_IMAGE/payment-service:$CI_COMMIT_SHA
+  allow_failure: false
+  only:
+    - main
+
+security:policy-audit:
+  stage: security-scan
+  image: cilium/hubble-cli:latest
+  script:
+    - |
+      # Dry-run policy deployment to check impact
+      kubectl apply -f cilium-policies/payment-service-netpol.yaml --dry-run=server -n $K8S_NAMESPACE
+      echo "✓ Cilium policy dry-run successful"
+  only:
+    - main
+
+# Deployment
+deploy:k8s:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl apply -f k8s/deployment.yaml -n $K8S_NAMESPACE
+    - kubectl apply -f cilium-policies/ -n $K8S_NAMESPACE
+    - kubectl apply -f istio-policies/ -n $K8S_NAMESPACE
+    - kubectl rollout status deployment/payment-service -n $K8S_NAMESPACE --timeout=5m
+  environment:
+    name: production
+    kubernetes:
+      namespace: $K8S_NAMESPACE
+  only:
+    - main
+
+# Post-deployment validation with K8sGPT
+post-deploy:k8sgpt-check:
+  stage: post-deploy-validation
+  image: ghcr.io/k8sgpt-ai/k8sgpt:v0.3.25
+  script:
+    - |
+      echo "Running K8sGPT analysis..."
+      k8sgpt auth add --backend openai --model gpt-4
+      k8sgpt analyze --namespace $K8S_NAMESPACE --explain --filter=Pod,Service,Deployment,NetworkPolicy > k8sgpt-report.json
+      
+      # Check for critical issues
+      CRITICAL_ISSUES=$(jq '.problems' k8sgpt-report.json)
+      if [ "$CRITICAL_ISSUES" -gt 0 ]; then
+        echo "⚠️  K8sGPT detected $CRITICAL_ISSUES issues"
+        jq '.results[] | select(.error != null)' k8sgpt-report.json
+        exit 1
+      else
+        echo "✓ No critical issues detected"
+      fi
+  artifacts:
+    paths:
+      - k8sgpt-report.json
+    expire_in: 7 days
+  allow_failure: true
+  only:
+    - main
+
+post-deploy:hubble-verify:
+  stage: post-deploy-validation
+  image: cilium/hubble-cli:latest
+  script:
+    - |
+      echo "Checking Hubble flows for policy violations..."
+      hubble observe --namespace $K8S_NAMESPACE --verdict DROPPED --last 100 > hubble-drops.log
+      
+      DROP_COUNT=$(wc -l < hubble-drops.log)
+      if [ "$DROP_COUNT" -gt 10 ]; then
+        echo "⚠️  High drop rate detected: $DROP_COUNT packets dropped"
+        cat hubble-drops.log
+        exit 1
+      else
+        echo "✓ Network policy behavior normal"
+      fi
+  artifacts:
+    paths:
+      - hubble-drops.log
+    expire_in: 7 days
+  allow_failure: true
+  only:
+    - main
+
+# Auto-healing jobs (triggered by schedule or failure)
+auto-heal:restart-crashloop:
+  stage: auto-heal
+  image: bitnami/kubectl:latest
+  script:
+    - |
+      echo "Checking for CrashLoopBackOff pods..."
+      CRASHLOOP_PODS=$(kubectl get pods -n $K8S_NAMESPACE -o json | \
+        jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting.reason == "CrashLoopBackOff") | .metadata.name')
+      
+      if [ -n "$CRASHLOOP_PODS" ]; then
+        echo "Found CrashLoopBackOff pods:"
+        echo "$CRASHLOOP_PODS"
+        
+        # Run K8sGPT for diagnosis
+        k8sgpt auth add --backend openai --model gpt-4
+        k8sgpt analyze --namespace $K8S_NAMESPACE --filter=Pod --explain > diagnosis.txt
+        
+        # Check for common fixes
+        if grep -q "JWT_SECRET_KEY" diagnosis.txt; then
+          echo "Detected missing JWT secret - attempting auto-fix"
+          # Verify secret exists
+          if ! kubectl get secret auth-secrets -n $K8S_NAMESPACE; then
+            echo "Creating missing secret..."
+            kubectl create secret generic auth-secrets \
+              --from-literal=JWT_SECRET_KEY=$(openssl rand -base64 32) \
+              -n $K8S_NAMESPACE
+          fi
+          # Restart deployment
+          kubectl rollout restart deployment/payment-service -n $K8S_NAMESPACE
+          echo "✓ Auto-fix applied - restarting deployment"
+        else
+          echo "No auto-fix available - manual intervention required"
+          cat diagnosis.txt
+          exit 1
+        fi
+      else
+        echo "✓ No CrashLoopBackOff pods found"
+      fi
+  when: on_failure
+  only:
+    - schedules
+    - main
+
+auto-heal:scale-on-high-load:
+  stage: auto-heal
+  image: bitnami/kubectl:latest
+  script:
+    - |
+      echo "Checking pod resource usage..."
+      CPU_USAGE=$(kubectl top pods -n $K8S_NAMESPACE --no-headers | \
+        awk '{if ($2 > 800) print $1}')
+      
+      if [ -n "$CPU_USAGE" ]; then
+        echo "High CPU usage detected - scaling up"
+        kubectl scale deployment/payment-service --replicas=5 -n $K8S_NAMESPACE
+        echo "✓ Scaled to 5 replicas"
+      else
+        echo "✓ Resource usage normal"
+      fi
+  when: manual
+  only:
+    - schedules
+
+# Scheduled health check job (runs every hour)
+scheduled:health-check:
+  stage: validate
+  image: ghcr.io/k8sgpt-ai/k8sgpt:v0.3.25
+  script:
+    - |
+      echo "=== Scheduled Health Check ==="
+      echo "Timestamp: $(date -Iseconds)"
+      
+      # Run comprehensive K8sGPT analysis
+      k8sgpt auth add --backend openai --model gpt-4
+      k8sgpt analyze --namespace $K8S_NAMESPACE --explain --output json > health-report.json
+      
+      # Generate markdown summary
+      cat > health-summary.md <<EOF
+      # Kubernetes Health Report
+      **Cluster**: production-aks-cluster
+      **Namespace**: $K8S_NAMESPACE
+      **Timestamp**: $(date -Iseconds)
+      
+      ## Critical Issues
+      $(jq -r '.results[] | select(.error != null) | "- **\(.kind)/\(.name)**: \(.error[^3_0].text)"' health-report.json)
+      
+      ## AI Analysis Summary
+      $(jq -r '.results[] | select(.ai_analysis != null) | "### \(.kind)/\(.name)\n\(.ai_analysis.analysis)\n"' health-report.json)
+      
+      ## Cilium Network Policy Status
+      $(hubble observe --namespace $K8S_NAMESPACE --verdict DROPPED --last 50 | wc -l) packets dropped in last hour
+      
+      ## Recommendations
+      - Review Cilium policy logs for unexpected drops
+      - Verify all Istio mTLS connections are healthy
+      - Check for any pending Kubernetes events
+      EOF
+      
+      cat health-summary.md
+      
+      # Post to GitLab issue if problems found
+      PROBLEM_COUNT=$(jq '.problems' health-report.json)
+      if [ "$PROBLEM_COUNT" -gt 0 ]; then
+        echo "Creating GitLab issue for $PROBLEM_COUNT problems..."
+        # Use GitLab API to create issue
+        curl --request POST \
+          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"title\":\"[Auto] Health Check Found $PROBLEM_COUNT Issues\",\"description\":\"$(cat health-summary.md)\"}" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/issues"
+      fi
+  artifacts:
+    paths:
+      - health-report.json
+      - health-summary.md
+    expire_in: 30 days
+  only:
+    - schedules

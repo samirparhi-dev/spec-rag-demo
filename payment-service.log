@@ -1,0 +1,10 @@
+2025-11-08T18:10:16.123Z INFO  [main] com.example.PaymentService - Starting Payment Service v2.1.0
+2025-11-08T18:10:16.234Z INFO  [main] com.example.PaymentService - Loading configuration from /etc/config/app.yaml
+2025-11-08T18:10:16.345Z ERROR [main] com.example.PaymentService - Failed to load JWT secret: environment variable JWT_SECRET_KEY not set
+2025-11-08T18:10:16.456Z ERROR [main] com.example.PaymentService - Authentication configuration incomplete
+2025-11-08T18:10:16.567Z FATAL [main] com.example.PaymentService - Cannot start without valid auth config
+java.lang.IllegalStateException: JWT_SECRET_KEY environment variable is required
+    at com.example.security.JwtValidator.initialize(JwtValidator.java:45)
+    at com.example.PaymentService.initSecurity(PaymentService.java:78)
+    at com.example.PaymentService.main(PaymentService.java:32)
+2025-11-08T18:10:16.678Z INFO  [main] com.example.PaymentService - Shutting down...

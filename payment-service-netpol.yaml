@@ -1,0 +1,54 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: payment-service-policy
+  namespace: production
+  annotations:
+    description: "Restrict payment service access to authenticated services only"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: payment-service
+  
+  ingress:
+    # Allow from user-service with Istio mTLS
+    - fromEndpoints:
+        - matchLabels:
+            app: user-service
+            security.istio.io/tlsMode: istio
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+          rules:
+            http:
+              - method: "POST"
+                path: "/api/payments/process"
+              - method: "GET"
+                path: "/api/payments/.*"
+    
+    # Deny direct frontend access (requires user-service intermediary)
+    # This is implicitly denied by not having a rule
+    
+  egress:
+    # Allow DNS
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+    
+    # Allow database access
+    - toEndpoints:
+        - matchLabels:
+            app: postgres-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
