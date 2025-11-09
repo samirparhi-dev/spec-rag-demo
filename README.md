@@ -59,14 +59,17 @@ This repository demonstrates the evolution from **Infrastructure as Code** to **
 
 ### 1. API Security Investigation
 **Problem**: Payment service returns 405 Method Not Allowed errors
+
 **Solution**: RAG system retrieves OpenAPI specs, Cilium logs, and Istio policies to identify root cause and suggest fixes
 
 ### 2. Pod Health Diagnostics
 **Problem**: Payment service in CrashLoopBackOff
+
 **Solution**: K8sGPT analyzes pod logs, events, and specs to diagnose missing JWT secret and auto-heal
 
 ### 3. Network Policy Validation
 **Problem**: Unexpected traffic drops in Cilium Hubble flows
+
 **Solution**: Cross-reference network policies with actual traffic patterns and recommend adjustments
 
 ## Repository Structure
