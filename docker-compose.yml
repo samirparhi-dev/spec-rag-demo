@@ -1,0 +1,53 @@
+version: '3.4'
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+      - ./mcp:/app/backend/data/mcp
+    environment:
+      - ENABLE_RAG=true
+      - ENABLE_MCP=true
+    depends_on:
+      - weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 20
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: ''
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/meta"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  k8sgpt:
+    image: ghcr.io/k8sgpt-ai/k8sgpt:latest
+    volumes:
+      - ~/.kube:/root/.kube
+    environment:
+      - KUBECONFIG=/root/.kube/config
+    depends_on:
+      - open-webui
+
+volumes:
+  open-webui:
+  weaviate:

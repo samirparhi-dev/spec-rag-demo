@@ -1,0 +1,216 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://example.com/payment-service-sbom",
+  "name": "payment-service-software-bill-of-materials",
+  "creationInfo": {
+    "created": "2025-11-09T10:45:00Z",
+    "creators": [
+      "Tool: trivy-0.48.1",
+      "Organization: Infrastructure as Spec Demo"
+    ]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-1",
+      "name": "payment-service",
+      "versionInfo": "1.2.3",
+      "supplier": "Organization: acme-corp",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "packageFileName": "payment-service.tar.gz",
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:docker/payment-service@1.2.3"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2",
+      "name": "openssl",
+      "versionInfo": "3.0.8-1ubuntu1",
+      "supplier": "Organization: Ubuntu",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:openssl:openssl:3.0.8:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-3",
+      "name": "curl",
+      "versionInfo": "7.88.1-1ubuntu2",
+      "supplier": "Organization: Ubuntu",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "curl",
+      "licenseDeclared": "curl",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:haxx:curl:7.88.1:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4",
+      "name": "glibc",
+      "versionInfo": "2.35-0ubuntu3.1",
+      "supplier": "Organization: Ubuntu",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "LGPL-2.1",
+      "licenseDeclared": "LGPL-2.1",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:gnu:glibc:2.35:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5",
+      "name": "nginx",
+      "versionInfo": "1.24.0-1ubuntu1",
+      "supplier": "Organization: Ubuntu",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "BSD-2-Clause",
+      "licenseDeclared": "BSD-2-Clause",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:f5:nginx:1.24.0:*:*:*:*:*:*:*"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-6",
+      "name": "spring-boot-starter-web",
+      "versionInfo": "3.1.4",
+      "supplier": "Organization: VMware",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "maven",
+          "referenceLocator": "org.springframework.boot:spring-boot-starter-web:3.1.4"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7",
+      "name": "jackson-databind",
+      "versionInfo": "2.15.2",
+      "supplier": "Organization: FasterXML",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "copyrightText": "NOASSERTION",
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "maven",
+          "referenceLocator": "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceType": "cpe23Type",
+          "referenceLocator": "cpe:2.3:a:fasterxml:jackson:2.15.2:*:*:*:*:*:*:*"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-2"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-3"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-4"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-5"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-6"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-1",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-7"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "SPDXID": "SPDXRef-Vulnerability-1",
+      "name": "CVE-2023-4911",
+      "description": "Buffer Overflow in glibc's ld.so",
+      "severity": "CRITICAL",
+      "affectedPackages": ["SPDXRef-Package-4"]
+    },
+    {
+      "SPDXID": "SPDXRef-Vulnerability-2",
+      "name": "CVE-2023-38545",
+      "description": "SOCKS5 heap buffer overflow in curl",
+      "severity": "HIGH",
+      "affectedPackages": ["SPDXRef-Package-3"]
+    },
+    {
+      "SPDXID": "SPDXRef-Vulnerability-3",
+      "name": "CVE-2023-44487",
+      "description": "HTTP/2 Rapid Reset Attack in nginx",
+      "severity": "HIGH",
+      "affectedPackages": ["SPDXRef-Package-5"]
+    }
+  ],
+  "annotations": [
+    {
+      "annotator": "Tool: trivy-0.48.1",
+      "annotationType": "OTHER",
+      "annotationDate": "2025-11-09T10:45:00Z",
+      "comment": "SBOM generated for security compliance and vulnerability management"
+    }
+  ]
+}

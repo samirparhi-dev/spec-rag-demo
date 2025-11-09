@@ -1,0 +1,85 @@
+{
+  "timestamp": "2025-11-09T11:26:24.072179",
+  "service": "payment-service",
+  "rag_queries": [
+    {
+      "query": "\n        Analyze the current health status of payment-service by examining:\n        1. Application logs and error patterns\n        2. Kubernetes pod status and resource usage\n        3. Network connectivity and security policies\n        4. Recent configuration changes\n\n        Identify any anomalies, performance issues, or security concerns.\n        Provide specific recommendations for improvement.\n        ",
+      "error": "RAG query failed: 400",
+      "timestamp": "2025-11-09T11:26:24.107200"
+    },
+    {
+      "query": "\n        Perform security analysis for payment-service:\n        1. Review vulnerability scan results\n        2. Analyze CIS benchmark compliance\n        3. Check network policy effectiveness\n        4. Identify potential attack vectors\n\n        Correlate findings and assess overall security posture.\n        Recommend immediate security improvements.\n        ",
+      "error": "RAG query failed: 400",
+      "timestamp": "2025-11-09T11:26:24.110322"
+    },
+    {
+      "query": "\n        Based on current system state and historical patterns for payment-service:\n\n        1. Predict potential security incidents in the next 30 days\n        2. Identify trending vulnerabilities\n        3. Forecast compliance drift\n        4. Anticipate capacity or performance issues\n\n        Provide risk probabilities and mitigation strategies.\n        ",
+      "error": "RAG query failed: 400",
+      "timestamp": "2025-11-09T11:26:24.113948"
+    }
+  ],
+  "insights": [],
+  "auto_healing_actions": [],
+  "security_trends": {},
+  "forecasting": {},
+  "cxo_dashboard": {
+    "summary": {
+      "overall_health_score": 75,
+      "security_score": 68,
+      "compliance_score": 72,
+      "performance_score": 85
+    },
+    "key_metrics": {
+      "active_alerts": 3,
+      "critical_vulnerabilities": 1,
+      "compliance_drift": 12,
+      "mttr_hours": 2.5,
+      "uptime_percentage": 99.7
+    },
+    "trends": {
+      "security_incidents_30d": [
+        2,
+        1,
+        3,
+        0,
+        1,
+        2,
+        1
+      ],
+      "compliance_score_30d": [
+        70,
+        72,
+        71,
+        73,
+        72,
+        74,
+        72
+      ],
+      "performance_score_30d": [
+        82,
+        85,
+        83,
+        87,
+        85,
+        88,
+        85
+      ]
+    },
+    "risk_forecast": {
+      "high_risk_events_next_30d": 2,
+      "predicted_downtime_hours": 0.5,
+      "recommended_budget_security": 150000
+    },
+    "top_risks": [
+      "Container vulnerabilities requiring patching",
+      "CIS compliance drift in authentication controls",
+      "Network policy gaps in microservice communication"
+    ]
+  },
+  "summary": {
+    "total_queries": 3,
+    "successful_queries": 0,
+    "healing_actions_triggered": 0,
+    "critical_findings": 0
+  }
+}

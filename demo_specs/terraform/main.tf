@@ -1,25 +1,98 @@
 # Infrastructure as Code for User Service
 terraform {
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
     }
   }
 }
 
-resource "aws_ecs_service" "user_service" {
-  name            = "user-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.user_service.arn
-  desired_count   = 3
+# Kubernetes namespace for user service
+resource "kubernetes_namespace" "user_service" {
+  metadata {
+    name = "production"
+  }
+}
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.user_service.arn
-    container_name   = "user-service"
-    container_port   = 8080
+# Kubernetes deployment for user service
+resource "kubernetes_deployment" "user_service" {
+  metadata {
+    name      = "user-service"
+    namespace = kubernetes_namespace.user_service.metadata[0].name
+    labels = {
+      app = "user-service"
+    }
   }
 
-  # Requires authentication via JWT
-  depends_on = [aws_lb_listener.https]
+  spec {
+    replicas = 2
+
+    selector {
+      match_labels = {
+        app = "user-service"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "user-service"
+        }
+      }
+
+      spec {
+        container {
+          name  = "user-service"
+          image = "registry.example.com/user-service:latest"
+
+          port {
+            container_port = 8080
+          }
+
+          env {
+            name = "JWT_SECRET_KEY"
+            value_from {
+              secret_key_ref {
+                name = "auth-secrets"
+                key  = "JWT_SECRET_KEY"
+              }
+            }
+          }
+
+          resources {
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+            requests = {
+              cpu    = "250m"
+              memory = "256Mi"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Kubernetes service for user service
+resource "kubernetes_service" "user_service" {
+  metadata {
+    name      = "user-service"
+    namespace = kubernetes_namespace.user_service.metadata[0].name
+  }
+
+  spec {
+    selector = {
+      app = "user-service"
+    }
+
+    port {
+      port        = 8080
+      target_port = 8080
+    }
+
+    type = "ClusterIP"
+  }
 }

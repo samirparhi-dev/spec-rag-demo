@@ -1,0 +1,10 @@
+[2025-11-09 04:33:53] Starting Infrastructure as Spec Demo Setup
+[2025-11-09 04:33:53] Validating prerequisites...
+[2025-11-09 04:33:53] Using Podman for container management
+[2025-11-09 04:33:54] ERROR: No container compose tool found. Please install podman-compose or docker-compose.
+[2025-11-09 04:34:13] Starting Infrastructure as Spec Demo Setup
+[2025-11-09 04:34:13] Validating prerequisites...
+[2025-11-09 04:34:13] Using Podman for container management
+[2025-11-09 04:34:13] Using Podman Compose
+[2025-11-09 04:34:13] Using Compose: podman-compose
+[2025-11-09 04:34:13] Starting demo containers...

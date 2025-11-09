@@ -1,0 +1,88 @@
+{
+  "report": {
+    "title": "CIS Kubernetes Benchmark Compliance Report",
+    "generated_at": "2025-11-09T10:45:00Z",
+    "kubernetes_version": "1.28.2",
+    "total_checks": 245,
+    "passed_checks": 189,
+    "failed_checks": 56,
+    "compliance_percentage": 77.1,
+    "severity_breakdown": {
+      "critical": 12,
+      "high": 28,
+      "medium": 16,
+      "low": 0
+    },
+    "failed_checks_details": [
+      {
+        "id": "1.1.1",
+        "description": "Ensure that the API server pod specification file permissions are set to 644 or more restrictive",
+        "severity": "high",
+        "status": "FAIL",
+        "remediation": "Run the below command (based on the file location on your system) on the control plane node. For example, chmod 644 /etc/kubernetes/manifests/kube-apiserver.yaml",
+        "evidence": "File permissions: 666 (too permissive)"
+      },
+      {
+        "id": "1.1.2",
+        "description": "Ensure that the API server pod specification file ownership is set to root:root",
+        "severity": "high",
+        "status": "FAIL",
+        "remediation": "Run the below command (based on the file location on your system) on the control plane node. For example, chown root:root /etc/kubernetes/manifests/kube-apiserver.yaml",
+        "evidence": "File ownership: kube:kube"
+      },
+      {
+        "id": "1.2.1",
+        "description": "Ensure that the --anonymous-auth argument is set to false",
+        "severity": "critical",
+        "status": "FAIL",
+        "remediation": "Edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the control plane node and set the below parameter. --anonymous-auth=false",
+        "evidence": "Anonymous auth is enabled"
+      },
+      {
+        "id": "1.2.2",
+        "description": "Ensure that the --basic-auth-file argument is not set",
+        "severity": "critical",
+        "status": "FAIL",
+        "remediation": "Follow the documentation and configure alternate mechanisms for authentication. Then, edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the control plane node and remove the --basic-auth-file=<filename> parameter.",
+        "evidence": "Basic auth file is configured"
+      },
+      {
+        "id": "2.1.1",
+        "description": "Ensure that the --profiling argument is set to false",
+        "severity": "medium",
+        "status": "FAIL",
+        "remediation": "Edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the control plane node and set the below parameter. --profiling=false",
+        "evidence": "Profiling is enabled"
+      },
+      {
+        "id": "4.1.1",
+        "description": "Ensure that the kubelet service file permissions are set to 644 or more restrictive",
+        "severity": "medium",
+        "status": "FAIL",
+        "remediation": "Run the following command to modify the kubelet service file permissions: chmod 644 /usr/lib/systemd/system/kubelet.service.d/10-kubelet-args.conf",
+        "evidence": "File permissions: 666"
+      }
+    ],
+    "node_details": [
+      {
+        "node_name": "k8s-control-plane-01",
+        "role": "control-plane",
+        "failed_checks": 34,
+        "passed_checks": 156
+      },
+      {
+        "node_name": "k8s-worker-01",
+        "role": "worker",
+        "failed_checks": 22,
+        "passed_checks": 89
+      }
+    ],
+    "recommendations": [
+      "Immediate remediation required for authentication-related controls (IDs 1.2.1, 1.2.2)",
+      "Review and correct file permissions on control plane nodes",
+      "Implement proper RBAC and disable anonymous authentication",
+      "Regular security scanning and compliance monitoring",
+      "Automate remediation through GitLab CI/CD pipelines"
+    ]
+  }
+}
